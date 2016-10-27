@@ -2,6 +2,7 @@
 
 import getopt
 import sys
+import socket
 import CloudFlare
 
 def main():
@@ -31,6 +32,12 @@ def main():
 
     if ip_address == '':
         exit('ip empty')
+    elif is_valid_ipv4_address(ip_address) == False:
+        ip = socket.gethostbyname(ip_address)
+        if is_valid_ipv4_address(ip) == True:
+           ip_address = ip
+        else:
+           exit('wrong ip or dns')
     if dns_name == '':
         exit('dns empty')
 
@@ -97,6 +104,20 @@ def delete_record(cf, zone_id, dns_name, ip_address):
             exit('/zones.delete - %s - api call failed' % (e))
         print 'DELETED: %s %s' % (dns_name, ip_address)
     exit(0)
+    
+def is_valid_ipv4_address(address):
+    try:
+        socket.inet_pton(socket.AF_INET, address)
+    except AttributeError:  # no inet_pton here, sorry
+        try:
+            socket.inet_aton(address)
+        except socket.error:
+            return False
+        return address.count('.') == 3
+    except socket.error:  # not a valid address
+        return False
+        
+    return True
 
 if __name__ == '__main__':
     main()
